@@ -1,10 +1,12 @@
 package com.phuctran.popularmoviessecondstage.enums;
 
+import java.io.Serializable;
+
 /**
  * Created by phuctran on 9/9/17.
  */
 
-public enum MovieSortType {
+public enum MovieSortType implements Serializable {
     MOST_POPULART("popular"),
     HIGHEST_RATED("top_rated"),
     FAVOURITE("favourite");
@@ -13,7 +15,7 @@ public enum MovieSortType {
     /**
      * @param text
      */
-    private MovieSortType(final String text) {
+    MovieSortType(final String text) {
         this.text = text;
     }
 
@@ -24,4 +26,4 @@ public enum MovieSortType {
     public String toString() {
         return text;
     }
-    }
+}

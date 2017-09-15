@@ -3,13 +3,16 @@ package com.phuctran.popularmoviessecondstage.activities;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.phuctran.popularmoviessecondstage.R;
 import com.phuctran.popularmoviessecondstage.adapters.MovieAdapter;
@@ -30,20 +33,45 @@ import retrofit2.Response;
 public class MainActivity extends BaseActivity implements MovieAdapter.ListItemClickListener, LoaderManager.LoaderCallbacks<List<MovieModel>> {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int MOVIE_LOADER_ID = 0;
+    private static final String ON_SAVE_INSTANCE_STATE_TYPE = "ON_SAVE_INSTANCE_STATE_TYPE";
+    private static final String ON_SAVE_INSTANCE_STATE_MOVIES = "ON_SAVE_INSTANCE_STATE_MOVIES";
     @BindView(R.id.rv_movies)
     RecyclerView mRvMovies;
 
     private MovieSortType mSortType = MovieSortType.MOST_POPULART;
     private MovieAdapter mMovieAdapter;
     private int mSpanCount = 2;
-    private List<MovieModel> mMovies = new ArrayList<>();
+    private ArrayList<MovieModel> mMovies;
 
     @Override
     protected void updateFollowingViewBinding(Bundle savedInstanceState) {
         setupRecyclerView();
-        getMovieData(MovieSortType.MOST_POPULART);
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_TYPE)) {
+                mSortType = (MovieSortType) savedInstanceState.getSerializable(ON_SAVE_INSTANCE_STATE_TYPE);
+            }
+            if (savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_MOVIES)) {
+                mMovies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_MOVIES);
+            }
+        }
+
         getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, this);
+
+        if (mSortType == MovieSortType.FAVOURITE) {
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+        } else {
+            if (mMovies != null) {
+                mMovieAdapter = new MovieAdapter(MainActivity.this, mMovies,
+                        MainActivity.this);
+                mRvMovies.setAdapter(mMovieAdapter);
+            } else {
+                getMovieData(mSortType);
+            }
+        }
+
     }
+
 
     @Override
     protected int getLayoutResource() {
@@ -53,8 +81,36 @@ public class MainActivity extends BaseActivity implements MovieAdapter.ListItemC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+        switch (mSortType) {
+            case FAVOURITE:
+                menu.getItem(2).setChecked(true);
+                break;
+            case HIGHEST_RATED:
+                menu.getItem(1).setChecked(true);
+                break;
+            case MOST_POPULART:
+                menu.getItem(0).setChecked(true);
+                break;
+        }
         return super.onCreateOptionsMenu(menu);
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(ON_SAVE_INSTANCE_STATE_TYPE, mSortType);
+        if (mMovies != null)
+            outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_MOVIES, mMovies);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putSerializable(ON_SAVE_INSTANCE_STATE_TYPE, mSortType);
+        if (mMovies != null)
+            outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_MOVIES, mMovies);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -106,7 +162,8 @@ public class MainActivity extends BaseActivity implements MovieAdapter.ListItemC
         RemoteDataSource.getInstance().getMovies(movieSortType.toString()).enqueue(new Callback<MovieResponseWrapper>() {
             @Override
             public void onResponse(Call<MovieResponseWrapper> call, Response<MovieResponseWrapper> response) {
-                mMovieAdapter = new MovieAdapter(MainActivity.this, response.body().getResults(),
+                mMovies = response.body().getResults();
+                mMovieAdapter = new MovieAdapter(MainActivity.this, mMovies,
                         MainActivity.this);
                 mRvMovies.setAdapter(mMovieAdapter);
             }
@@ -176,6 +233,7 @@ public class MainActivity extends BaseActivity implements MovieAdapter.ListItemC
 
     @Override
     public void onLoadFinished(Loader<List<MovieModel>> loader, List<MovieModel> movieModels) {
+        if (mSortType != MovieSortType.FAVOURITE) return;
         mMovieAdapter = new MovieAdapter(MainActivity.this, movieModels,
                 MainActivity.this);
         mRvMovies.setAdapter(mMovieAdapter);

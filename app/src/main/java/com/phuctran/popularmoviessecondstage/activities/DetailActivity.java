@@ -91,7 +91,7 @@ public class DetailActivity extends BaseActivity implements TrailerAdapter.Trail
         tvReleaseDate.setText(mMovieModel.getRelease_date());
         tvVoteAverage.setText(mMovieModel.getVote_average());
 
-        Picasso.with(this).load("http://image.tmdb.org/t/p/w185/" + mMovieModel.getBackdrop_path()).into(ivDetailThumbnail);
+        Picasso.with(this).load(BuildConfig.IMAGE_URL + mMovieModel.getBackdrop_path()).placeholder(R.drawable.placeholder).error(R.drawable.placeholder).into(ivDetailThumbnail);
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(mMovieModel.getTitle());

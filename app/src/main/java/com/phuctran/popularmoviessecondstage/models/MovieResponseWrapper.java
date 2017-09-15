@@ -1,5 +1,6 @@
 package com.phuctran.popularmoviessecondstage.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,17 +8,17 @@ import java.util.List;
  */
 
 public class MovieResponseWrapper {
-    List<MovieModel> results;
+    ArrayList<MovieModel> results;
 
-    public MovieResponseWrapper(List<MovieModel> results) {
+    public MovieResponseWrapper(ArrayList<MovieModel> results) {
         this.results = results;
     }
 
-    public List<MovieModel> getResults() {
+    public ArrayList<MovieModel> getResults() {
         return results;
     }
 
-    public void setResults(List<MovieModel> results) {
+    public void setResults(ArrayList<MovieModel> results) {
         this.results = results;
     }
 }
